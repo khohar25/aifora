@@ -1,0 +1,157 @@
+/* 1. IMPORT FONT PREMIUM (Gratis dari Google Fonts) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* 2. CUSTOM SCROLLBAR (Biar estetik di Laptop/PC) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px; /* Tambahan untuk scrollbar horizontal */
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 3. EFEK 3D SAMPUL BUKU INTERAKTIF */
+.book-card-3d {
+    perspective: 1000px; /* Jarak pandang kamera 3D */
+}
+
+.book-cover-3d {
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.6s ease;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Saat disentuh mouse, buku miring 3D ke kanan dan ke atas sedikit */
+.book-card-3d:hover .book-cover-3d {
+    transform: rotateY(12deg) rotateX(5deg) scale(1.05) translateZ(10px);
+    box-shadow: -15px 15px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Efek kilauan cahaya (Glare) di atas buku saat miring */
+.book-cover-3d::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        105deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.3) 25%,
+        transparent 30%
+    );
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.book-card-3d:hover .book-cover-3d::after {
+    opacity: 1;
+}
+
+/* 4. ANIMASI MUNCUL HALUS (Fade-in) */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+/* 5. ANIMASI CHATBOT MENGAMBANG */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+}
+
+.floating-bot {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* 6. TRANSAKSI FILTER AKTIF (Glow Effect) */
+.filter-btn.active {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); /* Biru menyala */
+    transform: scale(1.05);
+}
+
+/* 7. GLASSMORPHISM KHUSUS (Blur Kaca Transparan) */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.dark .glass-effect {
+    background: rgba(15, 23, 42, 0.7);
+}
+
+/* 8. ANIMASI TOAST NOTIFICATION (Persiapan UI Masa Depan) */
+@keyframes slideUpFade {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 20px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+.toast-animate {
+    animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 9. EFEK SKELETON LOADING (Shimmer) */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.skeleton-box {
+    background: #e2e8f0;
+    background-image: linear-gradient(
+        90deg, 
+        rgba(255, 255, 255, 0) 0, 
+        rgba(255, 255, 255, 0.4) 20%, 
+        rgba(255, 255, 255, 0) 40%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    background-repeat: no-repeat;
+    background-size: 800px 100%; 
+    animation: shimmer 2s infinite linear forwards;
+}
+
+.dark .skeleton-box {
+    background: #334155;
+    background-image: linear-gradient(
+        90deg, 
+        rgba(255, 255, 255, 0) 0, 
+        rgba(255, 255, 255, 0.1) 20%, 
+        rgba(255, 255, 255, 0) 40%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+}
