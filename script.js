@@ -16,22 +16,57 @@ function autoCategorize(title) {
     const lower = title.toLowerCase();
 
     const categoriesMap = [
-        { cat: 'Agama & Spiritualitas', keys: ['agama', 'islam', 'kristen', 'katolik', 'hindu', 'buddha', 'doa', 'tuhan', 'nabi', 'hijrah', 'quran', 'hadits', 'ibadah', 'spiritual', 'iman'] },
-        { cat: 'Bisnis & Ekonomi', keys: ['bisnis', 'ekonomi', 'uang', 'saham', 'investasi', 'marketing', 'kaya', 'finansial', 'cuan', 'manajemen', 'startup', 'wirausaha', 'akuntansi'] },
-        { cat: 'Komputer & Teknologi', keys: ['komputer', 'coding', 'pemrograman', 'html', 'javascript', 'python', 'php', 'website', 'aplikasi', 'software', 'hardware', 'teknologi', 'data', 'ai', 'internet', 'jaringan'] },
-        { cat: 'Komik & Novel Grafis', keys: ['komik', 'manga', 'manhwa', 'webtoon', 'conan', 'naruto', 'one piece', 'doraemon', 'grafis', 'marvel', 'dc'] },
-        { cat: 'Resep & Masakan', keys: ['resep', 'masak', 'makanan', 'minuman', 'kue', 'dapur', 'kuliner', 'menu', 'baking', 'chef', 'diet', 'hidangan'] },
-        { cat: 'Kesehatan & Medis', keys: ['sehat', 'kebugaran', 'medis', 'dokter', 'penyakit', 'obat', 'keperawatan', 'anatomi', 'gizi', 'olahraga', 'yoga'] },
-        { cat: 'Pendidikan & Ujian', keys: ['cpns', 'sbmptn', 'snbt', 'ujian', 'rumus', 'matematika', 'fisika', 'kimia', 'biologi', 'kamus', 'inggris', 'toefl', 'pelajaran', 'sekolah', 'soal', 'pendidikan', 'belajar'] },
-        { cat: 'Pengembangan Diri', keys: ['habit', 'mindset', 'motivasi', 'sukses', 'self improvement', 'produktif', 'berani', 'kepemimpinan', 'leadership', 'psikologi', 'mental', 'overthinking', 'bahagia', 'filsafat'] },
-        { cat: 'Buku Anak', keys: ['anak', 'dongeng', 'mewarnai', 'balita', 'parenting', 'bayi', 'cerita anak', 'pintar', 'bocah'] },
-        { cat: 'Biografi & Memoar', keys: ['biografi', 'memoar', 'kisah hidup', 'tokoh', 'jejak', 'autobiografi'] },
-        { cat: 'Sejarah & Sosial Politik', keys: ['sejarah', 'politik', 'sosial', 'budaya', 'hukum', 'undang-undang', 'kerajaan', 'perang', 'nasionalisme', 'pki', 'orde'] },
-        { cat: 'Romantis & Sastra', keys: ['cinta', 'rindu', 'romantis', 'puisi', 'sastra', 'patah hati', 'senja', 'kekasih', 'kasih'] },
-        { cat: 'Fiksi Dewasa & Thriller', keys: ['dewasa', '18+', 'metropop', 'thriller', 'misteri', 'detektif', 'pembunuhan', 'horor', 'hantu'] },
-        { cat: 'Fiksi & Novel Umum', keys: ['novel', 'fiksi', 'cerita', 'fantasi', 'petualangan', 'kisah'] },
-        { cat: 'Majalah', keys: ['majalah', 'magazine', 'tabloid'] },
-        { cat: 'Seni & Desain', keys: ['seni', 'desain', 'arsitektur', 'gambar', 'lukisan', 'fotografi'] }
+        // 1. Fiksi & Sastra
+        { cat: 'Novel', keys: ['novel', 'romance', 'metropop', 'teenlit', 'cinta', 'rindu', 'kekasih'] },
+        { cat: 'Misteri & Thriller', keys: ['misteri', 'thriller', 'detektif', 'pembunuhan', 'crime', 'jenayah', 'suspense'] },
+        { cat: 'Fantasi & Sci-Fi', keys: ['fantasi', 'dunia alternatif', 'sains fiksyen', 'aliens', 'magic', 'sihir'] },
+        { cat: 'Horor', keys: ['horor', 'hantu', 'seram', 'supernatural', 'mistis'] },
+        { cat: 'Komik & Manga', keys: ['komik', 'manga', 'manhwa', 'webtoon', 'naruto', 'one piece', 'conan'] },
+        { cat: 'Sastra', keys: ['puisi', 'prosa', 'drama', 'klasik', 'sastera', 'sajak'] },
+
+        // 2. Pengembangan Diri
+        { cat: 'Motivasi', keys: ['motivasi', 'sukses', 'inspirasi', 'semangat', 'berani', 'mindset'] },
+        { cat: 'Psikologi', keys: ['psikologi', 'mental', 'jiwa', 'kepribadian', 'overthinking'] },
+        { cat: 'Karier', keys: ['karier', 'kerja', 'kepemimpinan', 'leadership', 'interview', 'kantor'] },
+
+        // 3. Bisnis & Ekonomi
+        { cat: 'Kewirausahaan', keys: ['bisnis', 'wirausaha', 'startup', 'pengusaha', 'entrepreneur'] },
+        { cat: 'Investasi & Saham', keys: ['saham', 'investasi', 'trading', 'crypto', 'reksadana', 'keuangan'] },
+        { cat: 'Manajemen', keys: ['manajemen', 'operasi', 'sdm', 'strategi'] },
+        { cat: 'Pemasaran', keys: ['marketing', 'pemasaran', 'branding', 'jualan', 'ads'] },
+        { cat: 'Akuntansi', keys: ['akuntansi', 'pajak', 'audit', 'laporan keuangan'] },
+
+        // 4. Sains & Teknologi
+        { cat: 'Komputer & Programming', keys: ['coding', 'python', 'javascript', 'html', 'java', 'programming', 'php', 'aplikasi', 'software', 'sensor', 'arduino'] },
+        { cat: 'Internet & Sistem Informasi', keys: ['internet', 'jaringan', 'database', 'cloud', 'cyber security', 'keamanan'] },
+        { cat: 'Sains Alam', keys: ['fisika', 'kimia', 'biologi', 'astronomi', 'alam', 'semesta'] },
+
+        // 5. Anak-Anak
+        { cat: 'Buku Aktivitas', keys: ['mewarnai', 'teka-teki', 'puzzle', 'melukis', 'balita'] },
+        { cat: 'Cerita Anak & Dongeng', keys: ['dongeng', 'kancil', 'cerita rakyat', 'fabel', 'anak'] },
+
+        // 6. Pendidikan
+        { cat: 'Buku Pelajaran', keys: ['sd', 'smp', 'sma', 'smk', 'kurikulum', 'sekolah'] },
+        { cat: 'Persiapan Ujian', keys: ['utbk', 'cpns', 'snbt', 'toefl', 'ielts', 'ujian'] },
+        { cat: 'Kamus', keys: ['kamus', 'dictionary', 'inggris', 'mandarin', 'jepang'] },
+
+        // 7. Agama
+        { cat: 'Agama Islam', keys: ['islam', 'quran', 'hadits', 'fikih', 'shalat', 'nabi', 'hijrah'] },
+        { cat: 'Spiritualitas', keys: ['meditasi', 'filsafat', 'ketenangan', 'spiritual'] },
+
+        // 8. Hobi & Gaya Hidup
+        { cat: 'Masakan & Resep', keys: ['resep', 'masak', 'kuliner', 'kue', 'makanan', 'chef', 'baking'] },
+        { cat: 'Kesehatan & Nutrisi', keys: ['sehat', 'diet', 'gizi', 'olahraga', 'yoga', 'fitness', 'medis'] },
+        { cat: 'Pertanian & Haiwan Peliharaan', keys: ['kebun', 'tani', 'hidroponik', 'kucing', 'anjing', 'hewan'] },
+
+        // 9. Sosial & Politik
+        { cat: 'Sejarah', keys: ['sejarah', 'history', 'kerajaan', 'perang', 'masa lalu'] },
+        { cat: 'Hukum', keys: ['undang-undang', 'hukum', 'perdata', 'pidana', 'konstitusi'] },
+        { cat: 'Politik', keys: ['politik', 'partai', 'demokrasi', 'biografi tokoh', 'isu semasa'] },
+
+        // 10. Seni & Desain
+        { cat: 'Desain Grafis', keys: ['desain', 'photoshop', 'canva', 'ui/ux', 'estetika', 'visual'] },
+        { cat: 'Musik & Fotografi', keys: ['musik', 'gitar', 'vokal', 'foto', 'kamera', 'fotografi'] }
     ];
 
     for (let i = 0; i < categoriesMap.length; i++) {
@@ -52,7 +87,6 @@ async function fetchBooks() {
     if (spinner) spinner.style.display = 'block';
 
     try {
-        // Mengambil data dari server Django kamu
         const response = await fetch('https://aifora.pythonanywhere.com/api/buku/');
         if (!response.ok) throw new Error('Gagal mengambil data dari server');
         
@@ -61,14 +95,16 @@ async function fetchBooks() {
         const uniqueBooks = [];
         const titles = new Set();
 
-        // Menerjemahkan data dari Django ke format web
         data.forEach((book) => {
             const title = book.judul || "";
             const price = book.harga || "Cek Harga";
             const image = book.link_gambar || "https://via.placeholder.com/400?text=No+Cover";
             const link = book.link_shopee || "#";
-            const category = book.kategori || autoCategorize(title);
-            const desc = book.deskripsi || "Buku ini sangat menarik untuk dibaca.";
+            
+            // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI
+            const category = book.sub_kategori || book.kategori_utama || autoCategorize(title);
+            
+            const desc = book.deskripsi || `Buku "${title}" adalah koleksi pilihan Aifora yang sangat direkomendasikan untuk Anda.`;
             const rating = book.rating || "4.8";
             const sold = book.terjual || 150;
 
@@ -76,7 +112,7 @@ async function fetchBooks() {
                 titles.add(title.toLowerCase());
                 uniqueCategories.add(category);
                 uniqueBooks.push({ 
-                    id: "book_" + book.id, // Menggunakan ID asli dari database Django
+                    id: "book_" + book.id, 
                     title, image, price, link, category, desc, rating, sold 
                 });
             }
@@ -90,7 +126,7 @@ async function fetchBooks() {
 
     } catch (error) {
         console.error("Error Fetch API:", error);
-        if (spinner) spinner.innerHTML = "<p class='text-red-500 font-bold'>Gagal terhubung ke server database Aifora.</p>";
+        if (spinner) spinner.innerHTML = "<p class='text-red-500 font-bold text-center p-10'>Gagal terhubung ke database Aifora.</p>";
     }
 }
 
