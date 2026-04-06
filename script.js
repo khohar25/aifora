@@ -98,8 +98,10 @@ async function fetchBooks() {
         data.forEach((book) => {
             const title = book.judul || "";
             const price = book.harga || "Cek Harga";
-            const image = book.link_gambar || "https://via.placeholder.com/400?text=No+Cover";
-            const link = book.link_shopee || "#";
+            
+            // Perbaikan Bug Gambar: Hapus spasi di url gambar dan link agar muncul
+            const image = (book.link_gambar || "").trim() || "https://via.placeholder.com/400?text=No+Cover";
+            const link = (book.link_shopee || "").trim() || "#";
             
             // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI
             const category = book.sub_kategori || book.kategori_utama || autoCategorize(title);
@@ -655,7 +657,75 @@ document.getElementById('auth-modal')?.addEventListener('click', function(event)
     }
 });
 
+// FITUR LOGIN NYATA
+async function handleLogin() {
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const loginBtn = document.getElementById('btn-masuk');
+
+    if (!emailInput || !passwordInput) {
+        alert("Waduh, kolom input HTML tidak ditemukan!");
+        return;
+    }
+
+    const username = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!username || !password) {
+        showToast('Tolong isi username dan password!', true);
+        return;
+    }
+
+    loginBtn.innerText = "Mengecek...";
+    loginBtn.disabled = true;
+
+    try {
+        const response = await fetch('https://aifora.pythonanywhere.com/api-token-auth/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('aifora_token', data.token);
+            localStorage.setItem('aifora_user', username);
+            showToast('Selamat Datang, Admin Aifora! 👋');
+            toggleAuthModal();
+            updateLoginUI();
+        } else {
+            showToast('Username atau Password salah!', true);
+        }
+    } catch (error) {
+        showToast('Gagal terhubung ke server auth.', true);
+    } finally {
+        loginBtn.innerText = "Masuk";
+        loginBtn.disabled = false;
+    }
+}
+
+// Update tampilan kalau sudah login
+function updateLoginUI() {
+    const user = localStorage.getItem('aifora_user');
+    // Mencari tombol Sign In di dalam tag nav
+    const loginBtnNav = document.querySelector('nav button[onclick="toggleAuthModal()"]'); 
+    
+    if (user && loginBtnNav) {
+        loginBtnNav.innerHTML = `<i class="ph-fill ph-user-circle text-xl"></i> <span class="hidden md:inline">${user}</span>`;
+        // Ganti fungsi klik jadi Logout
+        loginBtnNav.onclick = () => {
+            if(confirm('Apakah Anda ingin keluar?')) {
+                localStorage.removeItem('aifora_token');
+                localStorage.removeItem('aifora_user');
+                location.reload();
+            }
+        };
+    }
+}
+
 // ==========================================
 // START APP
 // ==========================================
 fetchBooks();
+// Cek status login saat pertama kali muat
+updateLoginUI();
