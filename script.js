@@ -99,11 +99,11 @@ async function fetchBooks() {
             const title = book.judul || "";
             const price = book.harga || "Cek Harga";
             
-            // Perbaikan Bug Gambar: Hapus spasi di url gambar dan link agar muncul
+            // Hapus spasi kosong agar link gambar dan shopee tidak error
             const image = (book.link_gambar || "").trim() || "https://via.placeholder.com/400?text=No+Cover";
             const link = (book.link_shopee || "").trim() || "#";
             
-            // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI
+            // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI Regex
             const category = book.sub_kategori || book.kategori_utama || autoCategorize(title);
             
             const desc = book.deskripsi || `Buku "${title}" adalah koleksi pilihan Aifora yang sangat direkomendasikan untuk Anda.`;
@@ -657,64 +657,110 @@ document.getElementById('auth-modal')?.addEventListener('click', function(event)
     }
 });
 
-// FITUR LOGIN NYATA
-async function handleLogin() {
-    const emailInput = document.getElementById('login-email');
-    const passwordInput = document.getElementById('login-password');
-    const loginBtn = document.getElementById('btn-masuk');
+// ==========================================
+// FITUR LOGIN & REGISTER NYATA UNTUK USER
+// ==========================================
+let isLoginMode = true; // Status default adalah halaman Login
 
-    if (!emailInput || !passwordInput) {
+function switchAuthMode() {
+    isLoginMode = !isLoginMode;
+    const title = document.getElementById('modal-title');
+    const btnAuth = document.getElementById('btn-auth');
+    const switchText = document.getElementById('auth-switch-text');
+    const switchBtn = document.getElementById('auth-switch-btn');
+
+    if (isLoginMode) {
+        title.innerText = "Masuk Akun";
+        btnAuth.innerText = "Masuk Sekarang";
+        btnAuth.setAttribute('onclick', "handleAuth('login')");
+        switchText.innerText = "Belum punya akun?";
+        switchBtn.innerText = "Daftar sekarang";
+    } else {
+        title.innerText = "Daftar Akun Baru";
+        btnAuth.innerText = "Daftar Sekarang";
+        btnAuth.setAttribute('onclick', "handleAuth('register')");
+        switchText.innerText = "Sudah punya akun?";
+        switchBtn.innerText = "Masuk di sini";
+    }
+}
+
+async function handleAuth(action) {
+    const usernameInput = document.getElementById('auth-username');
+    const passwordInput = document.getElementById('auth-password');
+    const btnAuth = document.getElementById('btn-auth');
+
+    if (!usernameInput || !passwordInput) {
         alert("Waduh, kolom input HTML tidak ditemukan!");
         return;
     }
 
-    const username = emailInput.value.trim();
+    const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
 
     if (!username || !password) {
-        showToast('Tolong isi username dan password!', true);
+        showToast('Username dan Password wajib diisi!', true);
         return;
     }
 
-    loginBtn.innerText = "Mengecek...";
-    loginBtn.disabled = true;
+    if (username.includes(" ")) {
+        showToast('Username tidak boleh pakai spasi!', true);
+        return;
+    }
+
+    btnAuth.innerText = "Memproses...";
+    btnAuth.disabled = true;
+
+    // Menentukan ke mana data akan dikirim (Pintu Login atau Pintu Daftar)
+    const url = action === 'login' 
+        ? 'https://aifora.pythonanywhere.com/api-token-auth/' 
+        : 'https://aifora.pythonanywhere.com/api/register/';
 
     try {
-        const response = await fetch('https://aifora.pythonanywhere.com/api-token-auth/', {
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-            const data = await response.json();
+            // Kalau sukses (baik daftar maupun login), simpan token-nya!
             localStorage.setItem('aifora_token', data.token);
             localStorage.setItem('aifora_user', username);
-            showToast('Selamat Datang, Admin Aifora! 👋');
+            
+            showToast(`Berhasil! Selamat Datang, ${username}! 👋`);
             toggleAuthModal();
             updateLoginUI();
+            
+            // Bersihkan kolom input setelah sukses
+            usernameInput.value = '';
+            passwordInput.value = '';
         } else {
-            showToast('Username atau Password salah!', true);
+            // Tampilkan pesan error
+            const errorMsg = data.error || (data.non_field_errors && data.non_field_errors[0]) || 'Username atau Password salah!';
+            showToast(errorMsg, true);
         }
     } catch (error) {
-        showToast('Gagal terhubung ke server auth.', true);
+        showToast('Gagal terhubung ke server.', true);
+        console.error(error);
     } finally {
-        loginBtn.innerText = "Masuk";
-        loginBtn.disabled = false;
+        // Kembalikan nama tombol seperti semula
+        btnAuth.innerText = action === 'login' ? "Masuk Sekarang" : "Daftar Sekarang";
+        btnAuth.disabled = false;
     }
 }
 
-// Update tampilan kalau sudah login
+// Update tampilan Navbar kalau sudah login
 function updateLoginUI() {
     const user = localStorage.getItem('aifora_user');
-    // Mencari tombol Sign In di dalam tag nav
     const loginBtnNav = document.querySelector('nav button[onclick="toggleAuthModal()"]'); 
     
     if (user && loginBtnNav) {
         loginBtnNav.innerHTML = `<i class="ph-fill ph-user-circle text-xl"></i> <span class="hidden md:inline">${user}</span>`;
-        // Ganti fungsi klik jadi Logout
+        // Ganti fungsi tombol menjadi Logout
         loginBtnNav.onclick = () => {
-            if(confirm('Apakah Anda ingin keluar?')) {
+            if(confirm('Apakah Anda ingin keluar (Logout)?')) {
                 localStorage.removeItem('aifora_token');
                 localStorage.removeItem('aifora_user');
                 location.reload();
