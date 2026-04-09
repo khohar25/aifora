@@ -7,6 +7,32 @@ let allBooks = [];
 let wishlist = JSON.parse(localStorage.getItem('aifora_wishlist')) || [];
 let uniqueCategories = new Set();
 let bannerSlideInterval; 
+const API_URL = "https://aifora.pythonanywhere.com";
+
+// ==========================================
+// MANAJEMEN TAB (KATALOG VS KOMUNITAS)
+// ==========================================
+function switchTab(tabName) {
+    const tabKatalog = document.getElementById('tab-katalog');
+    const tabKomunitas = document.getElementById('tab-komunitas');
+    const viewKatalog = document.getElementById('katalog-view');
+    const viewKomunitas = document.getElementById('komunitas-view');
+
+    if (tabName === 'katalog') {
+        if(tabKatalog) tabKatalog.classList.add('tab-active');
+        if(tabKomunitas) tabKomunitas.classList.remove('tab-active');
+        if(viewKatalog) viewKatalog.classList.remove('hidden');
+        if(viewKomunitas) viewKomunitas.classList.add('hidden');
+    } else {
+        if(tabKomunitas) tabKomunitas.classList.add('tab-active');
+        if(tabKatalog) tabKatalog.classList.remove('tab-active');
+        if(viewKomunitas) viewKomunitas.classList.remove('hidden');
+        if(viewKatalog) viewKatalog.classList.add('hidden');
+        
+        // Load data postingan saat tab komunitas dibuka
+        fetchPostingan();
+    }
+}
 
 // ==========================================
 // KECERDASAN BUATAN PENGKATEGORIAN BUKU (REGEX PINTAR)
@@ -80,14 +106,14 @@ function autoCategorize(title) {
 }
 
 // ==========================================
-// FETCH & PROCESS DATA DARI SERVER PYTHON
+// FETCH & PROCESS DATA DARI SERVER PYTHON (BUKU)
 // ==========================================
 async function fetchBooks() {
     const spinner = document.getElementById('loading-spinner');
     if (spinner) spinner.style.display = 'block';
 
     try {
-        const response = await fetch('https://aifora.pythonanywhere.com/api/buku/');
+        const response = await fetch(`${API_URL}/api/buku/`);
         if (!response.ok) throw new Error('Gagal mengambil data dari server');
         
         const data = await response.json();
@@ -99,11 +125,11 @@ async function fetchBooks() {
             const title = book.judul || "";
             const price = book.harga || "Cek Harga";
             
-            // Hapus spasi kosong agar link gambar dan shopee tidak error
+            // Perbaikan Bug Gambar: Hapus spasi di url gambar dan link agar muncul
             const image = (book.link_gambar || "").trim() || "https://via.placeholder.com/400?text=No+Cover";
             const link = (book.link_shopee || "").trim() || "#";
             
-            // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI Regex
+            // LOGIKA PRIORITAS KATEGORI: Sub > Utama > AI
             const category = book.sub_kategori || book.kategori_utama || autoCategorize(title);
             
             const desc = book.deskripsi || `Buku "${title}" adalah koleksi pilihan Aifora yang sangat direkomendasikan untuk Anda.`;
@@ -261,7 +287,7 @@ function renderViralBanner(books) {
     });
     
     bannerContainer.innerHTML = html;
-    bannerWrapper.classList.remove('hidden');
+    if(bannerWrapper) bannerWrapper.classList.remove('hidden');
 
     if (bannerSlideInterval) clearInterval(bannerSlideInterval);
     bannerSlideInterval = setInterval(() => {
@@ -289,8 +315,10 @@ function openDetail(bookId) {
         toggleChat();
     }
 
-    document.getElementById('home-view').classList.add('hidden');
+    const katalogView = document.getElementById('katalog-view');
     const detailView = document.getElementById('detail-view');
+    
+    if(katalogView) katalogView.classList.add('hidden');
     
     detailView.innerHTML = `
         <button type="button" onclick="closeDetail()" class="mb-6 flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 font-bold transition-colors">
@@ -339,7 +367,7 @@ function openDetail(bookId) {
 
 function closeDetail() {
     document.getElementById('detail-view').classList.add('hidden');
-    document.getElementById('home-view').classList.remove('hidden');
+    document.getElementById('katalog-view').classList.remove('hidden');
     window.scrollTo(0, 0);
 }
 
@@ -352,8 +380,10 @@ if (searchInput) {
         const keyword = e.target.value.toLowerCase();
         const bannerContainer = document.getElementById('viral-banner-container');
         
-        if (keyword.length > 0) bannerContainer.style.display = 'none';
-        else bannerContainer.style.display = 'block';
+        if(bannerContainer) {
+            if (keyword.length > 0) bannerContainer.style.display = 'none';
+            else bannerContainer.style.display = 'block';
+        }
         
         renderBooks(allBooks.filter(b => b.title.toLowerCase().includes(keyword)));
     });
@@ -373,7 +403,8 @@ function attachFilterEvents() {
             const cat = btn.getAttribute('data-filter');
             
             if (searchInput) searchInput.value = ''; 
-            document.getElementById('viral-banner-container').style.display = 'block'; 
+            const bannerContainer = document.getElementById('viral-banner-container');
+            if(bannerContainer) bannerContainer.style.display = 'block'; 
             
             renderBooks(cat === 'all' ? allBooks : allBooks.filter(b => b.category === cat));
         });
@@ -383,11 +414,11 @@ function attachFilterEvents() {
 // ==========================================
 // FITUR WISHLIST & TOAST NOTIFICATION
 // ==========================================
-function showToast(message, isRemoved = false) {
+function showToast(message, isError = false) {
     const toast = document.createElement('div');
-    const icon = isRemoved ? '<i class="ph-fill ph-trash text-red-400"></i>' : '<i class="ph-fill ph-check-circle text-green-400"></i>';
+    const icon = isError ? '<i class="ph-fill ph-warning-circle text-red-400"></i>' : '<i class="ph-fill ph-check-circle text-green-400"></i>';
     
-    toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl z-[150] text-sm font-bold toast-animate flex items-center gap-2';
+    toast.className = `fixed bottom-24 left-1/2 transform -translate-x-1/2 ${isError ? 'bg-red-900' : 'bg-gray-900 dark:bg-white'} ${isError ? 'text-white' : 'text-white dark:text-gray-900'} px-6 py-3 rounded-full shadow-2xl z-[150] text-sm font-bold toast-animate flex items-center gap-2`;
     toast.innerHTML = `${icon} ${message}`;
     
     document.body.appendChild(toast);
@@ -408,7 +439,7 @@ function toggleWishlist(bookId) {
         showToast('Buku disimpan ke rak!');
     } else {
         wishlist.splice(index, 1);
-        showToast('Buku dihapus dari rak!', true);
+        showToast('Buku dihapus dari rak!');
     }
     
     localStorage.setItem('aifora_wishlist', JSON.stringify(wishlist));
@@ -627,8 +658,103 @@ function handleChat() {
 }
 
 // ==========================================
+// FITUR KOMUNITAS (SOSIAL MEDIA TIMELINE)
+// ==========================================
+async function fetchPostingan() {
+    const feedContainer = document.getElementById('feed-container');
+    const feedLoading = document.getElementById('feed-loading');
+    
+    if(!feedContainer || !feedLoading) return;
+    
+    feedLoading.classList.remove('hidden');
+    feedContainer.innerHTML = '';
+
+    try {
+        const response = await fetch(`${API_URL}/api/postingan/`);
+        const posts = await response.json();
+        
+        feedLoading.classList.add('hidden');
+
+        if (posts.length === 0) {
+            feedContainer.innerHTML = `<div class="text-center py-10 text-gray-500">Belum ada postingan. Jadilah yang pertama!</div>`;
+            return;
+        }
+
+        posts.forEach(post => {
+            const dateObj = new Date(post.dibuat_pada);
+            const tgl = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const inisial = post.nama_penulis.charAt(0).toUpperCase();
+            
+            const avatar = post.foto_penulis 
+                ? `<img src="${post.foto_penulis}" class="w-12 h-12 rounded-full object-cover border border-gray-200">`
+                : `<div class="w-12 h-12 rounded-full bg-gradient-to-tr from-gray-700 to-gray-500 text-white flex items-center justify-center font-bold text-lg">${inisial}</div>`;
+
+            const postHTML = `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        ${avatar}
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-sm">@${post.nama_penulis}</h4>
+                            <p class="text-xs text-gray-500">${tgl}</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-800 dark:text-gray-200 leading-relaxed text-[15px] whitespace-pre-wrap">${post.isi_tulisan}</p>
+                    <div class="mt-4 flex gap-4 text-gray-400">
+                        <button class="hover:text-red-500 flex items-center gap-1 transition-colors"><i class="ph ph-heart text-lg"></i> <span class="text-xs">Suka</span></button>
+                    </div>
+                </div>
+            `;
+            feedContainer.innerHTML += postHTML;
+        });
+
+    } catch (error) {
+        feedLoading.classList.add('hidden');
+        feedContainer.innerHTML = `<div class="text-red-500 text-center py-5">Gagal memuat timeline. Pastikan server aktif.</div>`;
+    }
+}
+
+async function kirimPostingan() {
+    const inputField = document.getElementById('post-input');
+    const btnKirim = document.getElementById('btn-kirim-post');
+    const teks = inputField.value.trim();
+    const token = localStorage.getItem('aifora_token');
+
+    if (!teks) return showToast('Tulis sesuatu dulu ya!', true);
+    if (!token) return showToast('Kamu harus login dulu!', true);
+
+    btnKirim.innerText = "Mengirim...";
+    btnKirim.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/api/postingan/`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}` 
+            },
+            body: JSON.stringify({ isi_tulisan: teks })
+        });
+
+        if (response.ok) {
+            inputField.value = '';
+            showToast('Postingan berhasil dikirim! 🎉');
+            fetchPostingan(); 
+        } else {
+            showToast('Gagal mengirim postingan.', true);
+        }
+    } catch (error) {
+        showToast('Terjadi kesalahan jaringan.', true);
+    } finally {
+        btnKirim.innerText = "Posting";
+        btnKirim.disabled = false;
+    }
+}
+
+// ==========================================
 // MODAL LOGIN / REGISTER (Auth Modal)
 // ==========================================
+let isLoginMode = true; 
+
 function toggleAuthModal() {
     const modal = document.getElementById('auth-modal');
     const modalContent = document.getElementById('auth-modal-content');
@@ -650,17 +776,11 @@ function toggleAuthModal() {
     }
 }
 
-// Tutup modal jika user klik area gelap (overlay)
 document.getElementById('auth-modal')?.addEventListener('click', function(event) {
     if (event.target === this) {
         toggleAuthModal();
     }
 });
-
-// ==========================================
-// FITUR LOGIN & REGISTER NYATA UNTUK USER
-// ==========================================
-let isLoginMode = true; // Status default adalah halaman Login
 
 function switchAuthMode() {
     isLoginMode = !isLoginMode;
@@ -690,7 +810,7 @@ async function handleAuth(action) {
     const btnAuth = document.getElementById('btn-auth');
 
     if (!usernameInput || !passwordInput) {
-        alert("Waduh, kolom input HTML tidak ditemukan!");
+        alert("Kolom input HTML tidak ditemukan!");
         return;
     }
 
@@ -710,10 +830,9 @@ async function handleAuth(action) {
     btnAuth.innerText = "Memproses...";
     btnAuth.disabled = true;
 
-    // Menentukan ke mana data akan dikirim (Pintu Login atau Pintu Daftar)
     const url = action === 'login' 
-        ? 'https://aifora.pythonanywhere.com/api-token-auth/' 
-        : 'https://aifora.pythonanywhere.com/api/register/';
+        ? `${API_URL}/api-token-auth/` 
+        : `${API_URL}/api/register/`;
 
     try {
         const response = await fetch(url, {
@@ -725,7 +844,6 @@ async function handleAuth(action) {
         const data = await response.json();
 
         if (response.ok) {
-            // Kalau sukses (baik daftar maupun login), simpan token-nya!
             localStorage.setItem('aifora_token', data.token);
             localStorage.setItem('aifora_user', username);
             
@@ -733,11 +851,14 @@ async function handleAuth(action) {
             toggleAuthModal();
             updateLoginUI();
             
-            // Bersihkan kolom input setelah sukses
             usernameInput.value = '';
             passwordInput.value = '';
+            
+            // Reload feed if community tab is active
+            if(!document.getElementById('komunitas-view').classList.contains('hidden')){
+                fetchPostingan();
+            }
         } else {
-            // Tampilkan pesan error
             const errorMsg = data.error || (data.non_field_errors && data.non_field_errors[0]) || 'Username atau Password salah!';
             showToast(errorMsg, true);
         }
@@ -745,20 +866,20 @@ async function handleAuth(action) {
         showToast('Gagal terhubung ke server.', true);
         console.error(error);
     } finally {
-        // Kembalikan nama tombol seperti semula
         btnAuth.innerText = action === 'login' ? "Masuk Sekarang" : "Daftar Sekarang";
         btnAuth.disabled = false;
     }
 }
 
-// Update tampilan Navbar kalau sudah login
 function updateLoginUI() {
     const user = localStorage.getItem('aifora_user');
-    const loginBtnNav = document.querySelector('nav button[onclick="toggleAuthModal()"]'); 
+    const loginBtnNav = document.getElementById('nav-auth-btn'); 
+    const promptLogin = document.getElementById('login-prompt-box');
+    const boxTulis = document.getElementById('create-post-box');
+    const userInit = document.getElementById('user-avatar-initial');
     
     if (user && loginBtnNav) {
         loginBtnNav.innerHTML = `<i class="ph-fill ph-user-circle text-xl"></i> <span class="hidden md:inline">${user}</span>`;
-        // Ganti fungsi tombol menjadi Logout
         loginBtnNav.onclick = () => {
             if(confirm('Apakah Anda ingin keluar (Logout)?')) {
                 localStorage.removeItem('aifora_token');
@@ -766,6 +887,10 @@ function updateLoginUI() {
                 location.reload();
             }
         };
+        
+        if(promptLogin) promptLogin.classList.add('hidden');
+        if(boxTulis) boxTulis.classList.remove('hidden');
+        if(userInit) userInit.innerText = user.charAt(0).toUpperCase();
     }
 }
 
@@ -773,5 +898,4 @@ function updateLoginUI() {
 // START APP
 // ==========================================
 fetchBooks();
-// Cek status login saat pertama kali muat
 updateLoginUI();
